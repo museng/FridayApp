@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:orientation="vertical"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:showIn="@layout/activity_game"
+    tools:context=".GameActivity"
+    android:background="#88CC66">
+
+    <LinearLayout
+        android:layout_weight="1"
+        android:layout_width="fill_parent"
+        android:layout_height="0dp"
+        android:orientation="horizontal" >
+
+        <ImageView android:id="@+id/drawn_hazard"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:src="@drawable/card_back" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_weight="1"
+        android:layout_width="fill_parent"
+        android:layout_height="0dp"
+        android:orientation="horizontal" >
+
+        <FrameLayout
+            android:layout_weight="2"
+            android:layout_width="0dp"
+            android:layout_height="match_parent">
+
+            <ImageView android:id="@+id/robinson_deck"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:src="@drawable/card_back"
+                android:onClick="drawRobinsonCard" />
+
+            <ImageView android:id="@+id/drawn_card_back"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:src="@drawable/card_back"
+                android:alpha="0" />
+
+            <ImageView android:id="@+id/drawn_card_front"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:src="@drawable/card_back"
+                android:alpha="0" />
+
+            <TextView android:id="@+id/robinson_counter"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:gravity="center"
+                android:text="18"
+                android:typeface="serif"
+                android:textStyle="bold"
+                android:textSize="50dp"
+                android:textColor="#FFFFFF"/>
+        </FrameLayout>
+
+        <HorizontalScrollView
+            android:layout_weight="6"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp">
+
+            <LinearLayout android:id="@+id/player_hand_layout"
+                android:layout_width="wrap_content"
+                android:layout_height="fill_parent"
+                android:fillViewport="true"
+                android:orientation="horizontal" >
+
+            </LinearLayout>
+        </HorizontalScrollView>
+
+        <TextView android:id="@+id/robinson_strength"
+            android:layout_weight="2"
+            android:layout_marginTop="40dp"
+            android:layout_marginBottom="40dp"
+            android:layout_height="match_parent"
+            android:layout_width="0dp"
+            android:text="0"
+            android:typeface="serif"
+            android:textStyle="bold"
+            android:textSize="50dp"
+            android:textColor="#FFFFFF"/>
+
+        <Button android:id="@+id/robinson_forfeit"
+            android:layout_weight="2"
+            android:layout_marginTop="40dp"
+            android:layout_marginBottom="40dp"
+            android:layout_height="match_parent"
+            android:layout_width="0dp"
+            android:layout_gravity="center"
+            android:text="End turn"
+            android:onClick="endPlayerTurn" />
+    </LinearLayout>
+</LinearLayout>
