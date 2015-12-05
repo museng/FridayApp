@@ -2,4 +2,6 @@
     <string name="app_name">Friday</string>
     <string name="action_settings">Settings</string>
     <string name="button_draw">Draw</string>
+    <string name="num_free_draws_string"># free draws</string>
+    <string name="num_life_points_string">life points</string>
 </resources>

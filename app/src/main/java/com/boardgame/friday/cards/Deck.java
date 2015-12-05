@@ -93,13 +93,13 @@ public class Deck {
     }
 
     /**
-     * drawCardOffTop
+     * peekCard
      *
      * Return a card from the deck without actually removing it.
      *
      * Useful for grabbing a specific card's image, etc.
      */
-    public Card getCardInfo(int index){
+    public Card peekCard(int index){
         if (index > getDrawPileSize()-1) return null;
         return drawPile.get(index);
     }

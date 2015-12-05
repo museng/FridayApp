@@ -20,11 +20,68 @@
         android:layout_height="0dp"
         android:orientation="horizontal" >
 
+        <LinearLayout
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:orientation="vertical" >
+
+            <TextView android:id="@+id/num_free_draws_title"
+                android:layout_weight="1"
+                android:layout_height="0dp"
+                android:layout_width="match_parent"
+                android:gravity="center"
+                android:text="@string/num_free_draws_string"
+                android:typeface="serif"
+                android:textStyle="bold"
+                android:textSize="26dp"
+                android:textColor="#FFFFFF"/>
+
+            <TextView android:id="@+id/num_free_draws"
+                android:layout_weight="1"
+                android:layout_height="0dp"
+                android:layout_width="match_parent"
+                android:gravity="center"
+                android:typeface="serif"
+                android:textStyle="bold"
+                android:textSize="26dp"
+                android:textColor="#FFFFFF"/>
+        </LinearLayout>
+
         <ImageView android:id="@+id/drawn_hazard"
-            android:layout_width="match_parent"
+            android:layout_weight="2"
+            android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_gravity="center"
             android:src="@drawable/card_back" />
+
+        <LinearLayout
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:orientation="vertical" >
+
+            <TextView android:id="@+id/player_life_title"
+                android:layout_weight="1"
+                android:layout_height="0dp"
+                android:layout_width="match_parent"
+                android:gravity="center"
+                android:text="@string/num_life_points_string"
+                android:typeface="serif"
+                android:textStyle="bold"
+                android:textSize="26dp"
+                android:textColor="#FFFFFF"/>
+
+            <TextView android:id="@+id/player_life"
+                android:layout_weight="1"
+                android:layout_height="0dp"
+                android:layout_width="match_parent"
+                android:gravity="center"
+                android:typeface="serif"
+                android:textStyle="bold"
+                android:textSize="26dp"
+                android:textColor="#FFFFFF"/>
+        </LinearLayout>
     </LinearLayout>
 
     <LinearLayout
@@ -63,7 +120,6 @@
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
                 android:gravity="center"
-                android:text="18"
                 android:typeface="serif"
                 android:textStyle="bold"
                 android:textSize="50dp"
@@ -92,7 +148,6 @@
             android:layout_marginBottom="40dp"
             android:layout_height="match_parent"
             android:layout_width="0dp"
-            android:text="0"
             android:typeface="serif"
             android:textStyle="bold"
             android:textSize="50dp"

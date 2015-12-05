@@ -29,6 +29,9 @@ import java.util.logging.Logger;
 public class RobinsonCard extends Card {
     private static final Logger LOGGER = Logger.getLogger(GameActivity.class.getName());
 
+    private int attackStrength;
+    private int costToRemove;
+
     /**
      * Create a new Robinson card by invoking the Card constructor.
      *
@@ -40,12 +43,17 @@ public class RobinsonCard extends Card {
      */
     public RobinsonCard(String cardName, int attackStrength, int costToRemove,
                         Ability cardAbility, int cardImage){
-        super(cardName, attackStrength, costToRemove, cardAbility,
-                Position.VERTICAL, cardImage);
+        super(cardName, cardAbility, cardImage);
+
+        this.attackStrength = attackStrength;
+        this.costToRemove = costToRemove;
 
         LOGGER.finer("RobinsonCard <" + cardName + "> has been created");
         LOGGER.finer("Strength:       " + attackStrength);
         LOGGER.finer("Cost to remove: " + costToRemove);
         LOGGER.finer("Ability:        " + cardAbility);
     }
+
+    public int getAttackStrength(){ return attackStrength; }
+    public int getCostToRemove(){ return costToRemove; }
 }

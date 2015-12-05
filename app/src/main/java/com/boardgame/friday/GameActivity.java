@@ -35,25 +35,26 @@ import java.util.logging.Level;
 // ==========================================
 //    Overall to dos, somewhat prioritized
 // ==========================================
+// TODO: BUG - player only loses one life regardless of how many extra cards he draws
 // TODO: BUG - when you click Robinson deck too fast, it sometimes breaks
 // TODO: BUG - why are drawn cards painted so far apart?!
-// TODO: Fix HazardCard (see comments there)
-// TODO: Add check to ensure user only draws free cards
-// TODO: Add life points (maybe have concept of "player" who contains Robinson deck + life?)
+// ==========================================
+// TODO: Add checks for death (player lifePoints < 0)
+// TODO: Add choice to spend life points on extra cards (right now it's forced)
 // TODO: Add ability to lose against hazards (and trash cards - "trash" deck so we keep 'em around?)
-// TODO: Add ability to spend life points on extra cards
+// TODO: Add ability for user to choose between two hazards at the start of each turn
 // TODO: Add support for abilities!
-// TODO: Add rest of hazards
-// TODO: Add support for 3 rounds
 // TODO: Add ability to view discard piles and count decks
-// TODO: Make the UI pretty (life counter, card counters, etc)
+// TODO: Make the UI pretty!
 // TODO: Add pirates
-// TODO: Add support for multiple levels
-// TODO: All classes use the GameActivity logger - each class should use its own!
+// TODO: All classes use the GameActivity logger - each class should use its own?!
 // TODO: Animation should be cleaner, the way it works right now it's sort of sloppy
-// TODO: Need better images, not crappy scaled down unreadable versions of full cards
+// TODO: Need better artwork - maybe small very minimalistic cards and you click to see full text?
+// TODO: Add more animation
 // TODO: Add some "help" type stuff, explanation of abilities, etc - basically add the rule book!
-
+// TODO: Add stat tracking and high scores, maybe back them up to a DB on AWS
+// TODO: Add support for multiple levels
+// TODO: Add music?
 
 /**
  * GameActivity
@@ -92,11 +93,14 @@ public class GameActivity extends AppCompatActivity {
     }
     public Round currentRound;
 
+    public int numFreeDrawsLeft;
+
+    Player player;
+
     // Various decks of cards...
     private Deck robinsonDeck;
     private Deck agingDeck;
     private Deck hazardDeck;
-    private Deck playerHand;        // All currently drawn Robinson cards
     private HazardCard drawnHazard; // The currently drawn hazard
 
     // TODO: There's probably a better way to do this
@@ -107,6 +111,9 @@ public class GameActivity extends AppCompatActivity {
     private TextView robinsonDrawCounter;
     private TextView robinsonStrength;
     private Button robinsonForfeit;
+
+    private TextView freeDrawsCounter;
+    private TextView lifePointsCounter;
 
     private int currentPlayerStrength;
     private int currentHazardStrength;
@@ -154,6 +161,9 @@ public class GameActivity extends AppCompatActivity {
         robinsonStrength = (TextView)findViewById(R.id.robinson_strength);
         robinsonForfeit = (Button) findViewById(R.id.robinson_forfeit);
 
+        freeDrawsCounter = (TextView)findViewById(R.id.num_free_draws);
+        lifePointsCounter = (TextView)findViewById(R.id.player_life);
+
         // Set up animators
         flipRightOut = (AnimatorSet) AnimatorInflater.loadAnimator(getApplicationContext(),
                 R.animator.flip_right_out);
@@ -163,7 +173,7 @@ public class GameActivity extends AppCompatActivity {
                 R.animator.slide_card);
 
         // Init all decks
-        playerHand = new Deck();
+        player = new Player();  // this also inits player hand "deck"
         initHazardDeck();
         initRobinsonDeck();
         initAgingDeck();
@@ -177,6 +187,8 @@ public class GameActivity extends AppCompatActivity {
 
         currentPlayerStrength = 0;
         robinsonStrength.setText(Integer.toString(currentPlayerStrength));
+
+        lifePointsCounter.setText(Integer.toString(player.getLifePoints()));
 
         // Drawing a hazard card signals the start of the game
         // TODO: Eventually player should click a button to draw hazard so this won't look as dumb
@@ -287,47 +299,144 @@ public class GameActivity extends AppCompatActivity {
         LOGGER.fine("Robinson deck created, contains " + robinsonDeck.getDrawPileSize() + " cards");
 
         robinsonDeck.shuffleDeck();
+
+        // TODO: should this be done here?!
+        robinsonDrawCounter.setText(Integer.toString(robinsonDeck.getDrawPileSize()));
     }
 
     // Create all Hazard Cards, create a Deck, and shuffle it up.
-    // TODO: Add the rest of the hazards
     public void initHazardDeck(){
         hazardDeck = new Deck();
 
-        /*
-        hazardDeck.addCard(
-                new HazardCard("wild animals", 4, new int[]{4, 7, 11},
-                        "experience", 3, 1, Card.Ability.PLUS_ONE_CARD,
-                        R.drawable.animals_experience_1card));
+        // All "with the raft to the wreck" hazard cards
         hazardDeck.addCard(
                 new HazardCard("with the raft to the wreck", 1, new int[]{0, 1, 3},
-                        "mimicry", 0, 1, Card.Ability.COPY_ONE,
-                        R.drawable.raft_mimicry_copy1));
+                        Card.Ability.NO_ABILITY, R.drawable.raft_food,
+                        "food", 0, 1, Card.Ability.PLUS_ONE_LIFE,
+                        R.drawable.food_raft));
         hazardDeck.addCard(
                 new HazardCard("with the raft to the wreck", 1, new int[]{0, 1, 3},
+                        Card.Ability.NO_ABILITY, R.drawable.raft_food,
+                        "food", 0, 1, Card.Ability.PLUS_ONE_LIFE,
+                        R.drawable.food_raft));
+        hazardDeck.addCard(
+                new HazardCard("with the raft to the wreck", 1, new int[]{0, 1, 3},
+                        Card.Ability.NO_ABILITY, R.drawable.raft_equipment,
+                        "equipment", 0, 1, Card.Ability.PLUS_TWO_CARD,
+                        R.drawable.equipment_raft));
+        hazardDeck.addCard(
+                new HazardCard("with the raft to the wreck", 1, new int[]{0, 1, 3},
+                        Card.Ability.NO_ABILITY, R.drawable.raft_equipment,
+                        "equipment", 0, 1, Card.Ability.PLUS_TWO_CARD,
+                        R.drawable.equipment_raft));
+        hazardDeck.addCard(
+                new HazardCard("with the raft to the wreck", 1, new int[]{0, 1, 3},
+                        Card.Ability.NO_ABILITY, R.drawable.raft_books,
+                        "books", 0, 1, Card.Ability.PHASE_MINUS_ONE,
+                        R.drawable.books_raft));
+        hazardDeck.addCard(
+                new HazardCard("with the raft to the wreck", 1, new int[]{0, 1, 3},
+                        Card.Ability.NO_ABILITY, R.drawable.raft_strategy,
                         "strategy", 0, 1, Card.Ability.EXCHANGE_TWO,
-                        R.drawable.raft_strategy_exchange2));
-        */
+                        R.drawable.strategy_raft));
         hazardDeck.addCard(
-                new HazardCard("further exploring the island", 3, new int[]{2, 5, 8},
-                        R.drawable.further_experience,
-                        "experience", 2, 1, Card.Ability.PLUS_ONE_CARD,
-                        R.drawable.further_experience_flipped));
+                new HazardCard("with the raft to the wreck", 1, new int[]{0, 1, 3},
+                        Card.Ability.NO_ABILITY, R.drawable.raft_realization,
+                        "realization", 0, 1, Card.Ability.DESTROY_ONE,
+                        R.drawable.realization_raft));
+
+        // All "exploring the island" hazard cards
         hazardDeck.addCard(
                 new HazardCard("exploring the island", 2, new int[]{1, 3, 6},
-                        R.drawable.exploring_mimicry,
+                        Card.Ability.NO_ABILITY, R.drawable.exploring_food,
+                        "food", 1, 1, Card.Ability.PLUS_ONE_LIFE,
+                        R.drawable.food_exploring));
+        hazardDeck.addCard(
+                new HazardCard("exploring the island", 2, new int[]{1, 3, 6},
+                        Card.Ability.NO_ABILITY, R.drawable.exploring_food,
+                        "food", 1, 1, Card.Ability.PLUS_ONE_LIFE,
+                        R.drawable.food_exploring));
+        hazardDeck.addCard(
+                new HazardCard("exploring the island", 2, new int[]{1, 3, 6},
+                        Card.Ability.NO_ABILITY, R.drawable.exploring_mimicry,
                         "mimicry", 1, 1, Card.Ability.COPY_ONE,
-                        R.drawable.exploring_mimicry_flipped));
+                        R.drawable.mimicry_exploring));
         hazardDeck.addCard(
-                new HazardCard("with the raft to the wreck", 1, new int[]{0, 1, 3},
-                        R.drawable.raft_food,
-                        "food", 0, 1, Card.Ability.PLUS_ONE_LIFE,
-                        R.drawable.raft_food_flipped));
+                new HazardCard("exploring the island", 2, new int[]{1, 3, 6},
+                        Card.Ability.NO_ABILITY, R.drawable.exploring_repeat,
+                        "repeat", 1, 1, Card.Ability.DOUBLE_ONE,
+                        R.drawable.repeat_exploring));
         hazardDeck.addCard(
-                new HazardCard("with the raft to the wreck", 1, new int[]{0, 1, 3},
-                        R.drawable.raft_food,
-                        "food", 0, 1, Card.Ability.PLUS_ONE_LIFE,
-                        R.drawable.raft_food_flipped));
+                new HazardCard("exploring the island", 2, new int[]{1, 3, 6},
+                        Card.Ability.NO_ABILITY, R.drawable.exploring_deception,
+                        "deception", 1, 1, Card.Ability.ONE_BELOW_STACK,
+                        R.drawable.deception_exploring));
+        hazardDeck.addCard(
+                new HazardCard("exploring the island", 2, new int[]{1, 3, 6},
+                        Card.Ability.NO_ABILITY, R.drawable.exploring_realization,
+                        "realization", 1, 1, Card.Ability.DESTROY_ONE,
+                        R.drawable.realization_exploring));
+        hazardDeck.addCard(
+                new HazardCard("exploring the island", 2, new int[]{1, 3, 6},
+                        Card.Ability.NO_ABILITY, R.drawable.exploring_weapon,
+                        "weapon", 2, 1, Card.Ability.NO_ABILITY,
+                        R.drawable.weapon_exploring));
+
+        // All "further exploring the island" hazard cards
+        hazardDeck.addCard(
+                new HazardCard("further exploring the island", 3, new int[]{2, 5, 8},
+                        Card.Ability.NO_ABILITY, R.drawable.further_experience,
+                        "experience", 2, 1, Card.Ability.PLUS_ONE_CARD,
+                        R.drawable.experience_further));
+        hazardDeck.addCard(
+                new HazardCard("further exploring the island", 3, new int[]{2, 5, 8},
+                        Card.Ability.NO_ABILITY, R.drawable.further_food,
+                        "food", 2, 1, Card.Ability.PLUS_ONE_LIFE,
+                        R.drawable.food_further));
+        hazardDeck.addCard(
+                new HazardCard("further exploring the island", 3, new int[]{2, 5, 8},
+                        Card.Ability.NO_ABILITY, R.drawable.further_strategy,
+                        "strategy", 2, 1, Card.Ability.EXCHANGE_ONE,
+                        R.drawable.strategy_further));
+        hazardDeck.addCard(
+                new HazardCard("further exploring the island", 3, new int[]{2, 5, 8},
+                        Card.Ability.NO_ABILITY, R.drawable.further_repeat,
+                        "repeat", 2, 1, Card.Ability.DOUBLE_ONE,
+                        R.drawable.repeat_further));
+        hazardDeck.addCard(
+                new HazardCard("further exploring the island", 3, new int[]{2, 5, 8},
+                        Card.Ability.NO_ABILITY, R.drawable.further_vision,
+                        "vision", 2, 1, Card.Ability.SORT_THREE,
+                        R.drawable.vision_further));
+
+        // All "wild animals" hazard cards
+        hazardDeck.addCard(
+                new HazardCard("wild animals", 4, new int[]{4, 7, 11},
+                        Card.Ability.NO_ABILITY, R.drawable.animals_realization,
+                        "realization", 3, 1, Card.Ability.DESTROY_ONE,
+                        R.drawable.realization_animals));
+        hazardDeck.addCard(
+                new HazardCard("wild animals", 4, new int[]{4, 7, 11},
+                        Card.Ability.NO_ABILITY, R.drawable.animals_vision,
+                        "vision", 3, 1, Card.Ability.SORT_THREE,
+                        R.drawable.vision_animals));
+        hazardDeck.addCard(
+                new HazardCard("wild animals", 4, new int[]{4, 7, 11},
+                        Card.Ability.NO_ABILITY, R.drawable.animals_strategy,
+                        "strategy", 3, 1, Card.Ability.EXCHANGE_ONE,
+                        R.drawable.strategy_animals));
+
+        // All "cannibals" hazard cards
+        hazardDeck.addCard(
+                new HazardCard("cannibals", 5, new int[]{5, 9, 14},
+                        Card.Ability.NO_ABILITY, R.drawable.cannibals_weapon,
+                        "weapon", 4, 1, Card.Ability.NO_ABILITY,
+                        R.drawable.weapon_cannibals));
+        hazardDeck.addCard(
+                new HazardCard("cannibals", 5, new int[]{5, 9, 14},
+                        Card.Ability.NO_ABILITY, R.drawable.cannibals_weapon,
+                        "weapon", 4, 1, Card.Ability.NO_ABILITY,
+                        R.drawable.weapon_cannibals));
 
         hazardDeck.shuffleDeck();
     }
@@ -337,7 +446,6 @@ public class GameActivity extends AppCompatActivity {
     // bottom (the "old" aging cards), so we'll actually create two decks
     // (white, gray), shuffle them up, then draw off the top of each to
     // build the final single Aging deck.
-    // TODO: Need to add real card images here!
     public void initAgingDeck(){
         agingDeck = new Deck();
 
@@ -345,32 +453,32 @@ public class GameActivity extends AppCompatActivity {
         Deck whiteAging = new Deck();
 
         grayAging.addCard(
-                new RobinsonCard("hungry", 0, 2, Card.Ability.MINUS_ONE_LIFE, R.drawable.weak));
+                new RobinsonCard("hungry", 0, 2, Card.Ability.MINUS_ONE_LIFE, R.drawable.hungry));
         grayAging.addCard(
-                new RobinsonCard("scared", 0, 2, Card.Ability.HIGHEST_CARD_ZERO, R.drawable.weak));
+                new RobinsonCard("scared", 0, 2, Card.Ability.HIGHEST_CARD_ZERO, R.drawable.scared));
         grayAging.addCard(
-                new RobinsonCard("scared", 0, 2, Card.Ability.HIGHEST_CARD_ZERO, R.drawable.weak));
+                new RobinsonCard("scared", 0, 2, Card.Ability.HIGHEST_CARD_ZERO, R.drawable.scared));
         grayAging.addCard(
-                new RobinsonCard("very tired", 0, 2, Card.Ability.STOP_DRAWING, R.drawable.weak));
+                new RobinsonCard("very tired", 0, 2, Card.Ability.STOP_DRAWING, R.drawable.very_tired));
         grayAging.addCard(
-                new RobinsonCard("distracted", -1, 2, Card.Ability.NO_ABILITY, R.drawable.weak));
+                new RobinsonCard("distracted", -1, 2, Card.Ability.NO_ABILITY, R.drawable.aging_distracted));
         grayAging.addCard(
-                new RobinsonCard("stupid", -2, 2, Card.Ability.NO_ABILITY, R.drawable.weak));
+                new RobinsonCard("stupid", -2, 2, Card.Ability.NO_ABILITY, R.drawable.stupid));
         grayAging.addCard(
-                new RobinsonCard("stupid", -2, 2, Card.Ability.NO_ABILITY, R.drawable.weak));
+                new RobinsonCard("stupid", -2, 2, Card.Ability.NO_ABILITY, R.drawable.stupid));
 
         // Only add in the "very stupid" card on levels 3 or 4
         if (currentLevel == GameLevel.LEVEL_THREE || currentLevel == GameLevel.LEVEL_FOUR) {
             grayAging.addCard(
-                    new RobinsonCard("very stupid", -3, 2, Card.Ability.NO_ABILITY, R.drawable.weak));
+                    new RobinsonCard("very stupid", -3, 2, Card.Ability.NO_ABILITY, R.drawable.very_stupid));
         }
 
         whiteAging.addCard(
-                new RobinsonCard("moronic", -4, 2, Card.Ability.NO_ABILITY, R.drawable.weak));
+                new RobinsonCard("moronic", -4, 2, Card.Ability.NO_ABILITY, R.drawable.moronic));
         whiteAging.addCard(
-                new RobinsonCard("very hungry", 0, 2, Card.Ability.MINUS_TWO_LIFE, R.drawable.weak));
+                new RobinsonCard("very hungry", 0, 2, Card.Ability.MINUS_TWO_LIFE, R.drawable.very_hungry));
         whiteAging.addCard(
-                new RobinsonCard("suicidal", -4, 2, Card.Ability.NO_ABILITY, R.drawable.weak));
+                new RobinsonCard("suicidal", -4, 2, Card.Ability.NO_ABILITY, R.drawable.suicidal));
 
         grayAging.shuffleDeck();
         whiteAging.shuffleDeck();
@@ -428,6 +536,13 @@ public class GameActivity extends AppCompatActivity {
         currentHazardStrength = drawnHazard.getHazardStrength(currentRound.ordinal());
 
         LOGGER.fine("[drawHazardCard] Painted hazard card = " + drawnHazard.getCardName() + " onto board");
+
+        setNumFreeDraws(drawnHazard.getNumFreeDraws());
+    }
+
+    private void setNumFreeDraws(int numFreeDraws){
+        numFreeDrawsLeft = numFreeDraws;
+        freeDrawsCounter.setText(Integer.toString(numFreeDrawsLeft));
     }
 
     /**
@@ -465,27 +580,36 @@ public class GameActivity extends AppCompatActivity {
                 LOGGER.fine("[drawRobinsonCard] Shuffled the Robinson deck");
             }
 
-            // Draw a card and add it to the player's hand
-            playerHand.addCard(robinsonDeck.drawCardOffTop());
+            // TODO: This should be the player's choice, whether to spend life points on more draws
+            if (numFreeDrawsLeft == 0){
+                setPlayerLifePoints(-1);
+            }
 
-            LOGGER.fine("[drawRobinsonCard] Drew RobinsonCard <" +
-                    playerHand.getCardInfo(playerHand.getDrawPileSize() - 1).getCardName() +
-                    "> and added it to playerHand");
+            // Draw a card and add it to the player's hand
+            player.addCardToHand(robinsonDeck.drawCardOffTop());
+
             LOGGER.fine("[drawRobinsonCard] Robinson deck has " + robinsonDeck.getDrawPileSize() + " cards left");
 
             // TODO: Clean up the "cards left in the deck" display (when UI gets improved)
             robinsonDrawCounter.setText(Integer.toString(robinsonDeck.getDrawPileSize()));
 
             // Animate the newly drawn card into the player's hand
-            animateRobinsonCardToHand(playerHand.getDrawPileSize() - 1);
+            animateRobinsonCardToHand(player.getSizeOfHand() - 1);
 
             // The player is now free to draw another card
             canDrawRobinsonCard = true;
 
             LOGGER.fine("[drawRobinsonCard] canDrawRobinsonCard has been set to true");
+
+            setNumFreeDraws(--numFreeDrawsLeft);
         }else{
             LOGGER.fine("[drawRobinsonCard] canDrawRobinsonCard is false, can't draw Robinson card right now");
         }
+    }
+
+    private void setPlayerLifePoints(int lifePoints){
+        player.updateLifePoints(lifePoints);
+        lifePointsCounter.setText(Integer.toString(player.getLifePoints()));
     }
 
 
@@ -496,7 +620,7 @@ public class GameActivity extends AppCompatActivity {
         // Get front image of new card
         // TODO: Remove debug line
         System.out.println("Called animateRobinsonCardToHand, index = " + cardIndex);
-        Card cardToAnim = playerHand.getCardInfo(cardIndex);
+        RobinsonCard cardToAnim = (RobinsonCard)player.peekCardInHand(cardIndex);
         Bitmap cardImage = decodeResource(cardToAnim.getCardImage());
         final Bitmap finalImage = cardImage;    // "final" within this scope, so we can pass to listener
         drawnCardFront.setImageBitmap(cardImage);
@@ -585,8 +709,8 @@ public class GameActivity extends AppCompatActivity {
     // calling from the activity, there's no view to pass in
     public void discardHand(){
         // Throw away in the player's hand onto the Robinson deck discard pile
-        for (int i = 0; i < playerHand.getDrawPileSize() - 1; i++){
-            robinsonDeck.discardCard(playerHand.drawCardOffTop());
+        for (int i = 0; i < player.getSizeOfHand() - 1; i++){
+            robinsonDeck.discardCard(player.takeTopCardFromHand());
         }
 
         // Remove all card images from the player hand scrollview
