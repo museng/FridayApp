@@ -36,7 +36,8 @@ import java.util.logging.Level;
 //    Overall to dos, somewhat prioritized
 // ==========================================
 // TODO: BUG - when you click Robinson deck too fast, it sometimes breaks
-// TODO: Add ability to turn hazard into fighting card after beating it
+// TODO: BUG - why are drawn cards painted so far apart?!
+// TODO: Fix HazardCard (see comments there)
 // TODO: Add check to ensure user only draws free cards
 // TODO: Add life points (maybe have concept of "player" who contains Robinson deck + life?)
 // TODO: Add ability to lose against hazards (and trash cards - "trash" deck so we keep 'em around?)
@@ -63,6 +64,8 @@ import java.util.logging.Level;
  *  o Allowing the player to choose
  */
 public class GameActivity extends AppCompatActivity {
+
+    private static final int CARD_SCALE = 150;  // scale cards to this size
 
     private static final Logger LOGGER = Logger.getLogger(GameActivity.class.getName());
     //private static final Level LOG_LEVEL = Level.SEVERE; // Turn off logging
@@ -307,16 +310,24 @@ public class GameActivity extends AppCompatActivity {
         */
         hazardDeck.addCard(
                 new HazardCard("further exploring the island", 3, new int[]{2, 5, 8},
-                        "realization", 2, 1, Card.Ability.DESTROY_ONE,
-                        R.drawable.further_realization_destroy1));
+                        R.drawable.further_experience,
+                        "experience", 2, 1, Card.Ability.PLUS_ONE_CARD,
+                        R.drawable.further_experience_flipped));
         hazardDeck.addCard(
                 new HazardCard("exploring the island", 2, new int[]{1, 3, 6},
-                        "weapon", 2, 1, Card.Ability.NO_ABILITY,
-                        R.drawable.exploring_weapon_none));
+                        R.drawable.exploring_mimicry,
+                        "mimicry", 1, 1, Card.Ability.COPY_ONE,
+                        R.drawable.exploring_mimicry_flipped));
         hazardDeck.addCard(
                 new HazardCard("with the raft to the wreck", 1, new int[]{0, 1, 3},
-                        "deception", 0, 1, Card.Ability.ONE_BELOW_STACK,
-                        R.drawable.raft_deception_1belowpile));
+                        R.drawable.raft_food,
+                        "food", 0, 1, Card.Ability.PLUS_ONE_LIFE,
+                        R.drawable.raft_food_flipped));
+        hazardDeck.addCard(
+                new HazardCard("with the raft to the wreck", 1, new int[]{0, 1, 3},
+                        R.drawable.raft_food,
+                        "food", 0, 1, Card.Ability.PLUS_ONE_LIFE,
+                        R.drawable.raft_food_flipped));
 
         hazardDeck.shuffleDeck();
     }
@@ -596,7 +607,10 @@ public class GameActivity extends AppCompatActivity {
         BitmapFactory.decodeResource(getResources(), resID, o);
 
         // The new size we want to scale to
-        final int REQUIRED_SIZE = 100;
+        // Why not just use CARD_SCALE directly? This used to use
+        // a hard-coded value and I might want to go back to doing
+        // it that way (who knows)
+        final int REQUIRED_SIZE = CARD_SCALE;
 
         // Find the correct scale value, should be a power of two
         int scale = 1;

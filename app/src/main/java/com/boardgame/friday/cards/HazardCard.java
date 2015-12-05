@@ -38,30 +38,37 @@ public class HazardCard extends Card {
     private int numFreeDraws;           // number of cards user can draw for free to fight hazard
     private int[] hazardStrength;       // strength of hazard in green, yellow, red rounds
     private String robinsonCardName;    // name of card once converted to Robinson card
+    private int robinsonCardImage;
+
+    private RobinsonCard converted;
 
     /**
      * Create a new hazard card by setting hazard-specific fields manually before
      * invoking the Card constructor.
      *
-     * @param   hazardCardName      the name of the hazard
-     * @param   numFreeDraws        number of cards user can draw for free to fight hazard
-     * @param   hazardStrength      strength of hazard in green, yellow, red rounds
-     * @param   robinsonCardName    name of card once converted to RobinsonCard
-     * @param   attackStrength      attack strength once converted to RobinsonCard
-     * @param   costToRemove        life point cost to remove once converted to RobinsonCard
-     * @param   cardAbility         card ability once converted to RobinsonCard
-     * @param   cardImage           card image
+     * @param   hazardName              the name of the hazard
+     * @param   hazardFreeDraws         number of cards user can draw for free to fight hazard
+     * @param   hazardStrength          strength of hazard in green, yellow, red rounds
+     * @param   hazardImage             image for hazard version of card
+     * @param   robinsonName            name of card once converted to RobinsonCard
+     * @param   robinsonAttackStrength  attack strength once converted to RobinsonCard
+     * @param   robinsonCostToRemove    life point cost to remove once converted to RobinsonCard
+     * @param   robinsonAbility         card ability once converted to RobinsonCard
+     * @param   robinsonImage           card image
      */
-    public HazardCard(String hazardCardName, int numFreeDraws, int[] hazardStrength,
-                      String robinsonCardName, int attackStrength, int costToRemove,
-                      Ability cardAbility, int cardImage){
-        super(hazardCardName, attackStrength, costToRemove, cardAbility,
-                Position.VERTICAL, cardImage);
+    public HazardCard(String hazardName, int hazardFreeDraws, int[] hazardStrength,
+                      int hazardImage, String robinsonName, int robinsonAttackStrength,
+                      int robinsonCostToRemove, Ability robinsonAbility, int robinsonImage){
 
-        this.numFreeDraws = numFreeDraws;
+        // TODO: the way this calls super needs to change, maybe whole Card class dynamic here...
+        super(hazardName, robinsonAttackStrength, robinsonCostToRemove, robinsonAbility,
+                Position.VERTICAL, hazardImage);
+
+        this.numFreeDraws = hazardFreeDraws;
         this.hazardStrength = hazardStrength;   // expecting 3-length array (G,Y,R strengths)
-        this.robinsonCardName = robinsonCardName;
+        this.robinsonCardName = robinsonName;
 
+        /*
         LOGGER.finer("HazardCard <" + hazardCardName + "> has been created");
         LOGGER.finer("Number of free draws:           " + numFreeDraws);
         LOGGER.finer("Strength in green round:        " + hazardStrength[0]);
@@ -71,6 +78,11 @@ public class HazardCard extends Card {
         LOGGER.finer("Strength as RobinsonCard:       " + attackStrength);
         LOGGER.finer("Cost to remove as RobinsonCard: " + costToRemove);
         LOGGER.finer("Ability as RobinsonCard:        " + cardAbility);
+        */
+
+        converted = new RobinsonCard(
+                robinsonName, robinsonAttackStrength, robinsonCostToRemove,
+                robinsonAbility, robinsonImage);
     }
 
     /**
@@ -86,12 +98,17 @@ public class HazardCard extends Card {
      * @return  the RobinsonCard created from this HazardCard
      */
     public RobinsonCard convertToRobinsonCard(){
+
+        /*
         RobinsonCard newCard = new RobinsonCard(
                 robinsonCardName, getAttackStrength(), getCostToRemove(), getCardAbility(), getCardImage());
 
         LOGGER.finer("Hazard <" + getCardName() + "> has been converted into Robinson card <" +  newCard.getCardName() + ">");
 
         return newCard;
+        */
+
+        return converted;
     }
 
     /**
