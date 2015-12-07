@@ -3,7 +3,9 @@ package com.boardgame.friday;
 import android.animation.Animator;
 import android.animation.AnimatorInflater;
 import android.animation.AnimatorSet;
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -35,7 +37,6 @@ import java.util.logging.Level;
 // ==========================================
 //    Overall to dos, somewhat prioritized
 // ==========================================
-// TODO: BUG - player only loses one life regardless of how many extra cards he draws
 // TODO: BUG - when you click Robinson deck too fast, it sometimes breaks
 // TODO: BUG - why are drawn cards painted so far apart?!
 // ==========================================
@@ -66,7 +67,9 @@ import java.util.logging.Level;
  */
 public class GameActivity extends AppCompatActivity {
 
-    private static final int CARD_SCALE = 150;  // scale cards to this size
+    private static final int CARD_TRASH_REQUEST = 0;
+
+    public static final int CARD_SCALE = 150;  // scale cards to this size
 
     private static final Logger LOGGER = Logger.getLogger(GameActivity.class.getName());
     //private static final Level LOG_LEVEL = Level.SEVERE; // Turn off logging
@@ -101,6 +104,7 @@ public class GameActivity extends AppCompatActivity {
     private Deck robinsonDeck;
     private Deck agingDeck;
     private Deck hazardDeck;
+    private Deck trashDeck;
     private HazardCard drawnHazard; // The currently drawn hazard
 
     // TODO: There's probably a better way to do this
@@ -174,6 +178,7 @@ public class GameActivity extends AppCompatActivity {
 
         // Init all decks
         player = new Player();  // this also inits player hand "deck"
+        trashDeck = new Deck();
         initHazardDeck();
         initRobinsonDeck();
         initAgingDeck();
@@ -531,8 +536,10 @@ public class GameActivity extends AppCompatActivity {
 
         LOGGER.fine("[drawHazardCard] Drew hazard card = " + drawnHazard.getCardName());
 
-        Bitmap cardImage = decodeResource(drawnHazard.getCardImage());
+        BitmapDecoder bd = new BitmapDecoder();
+        Bitmap cardImage = bd.decodeResource(getApplicationContext(), drawnHazard.getCardImage(), CARD_SCALE);
         drawnHazardImage.setImageBitmap(cardImage);
+
         currentHazardStrength = drawnHazard.getHazardStrength(currentRound.ordinal());
 
         LOGGER.fine("[drawHazardCard] Painted hazard card = " + drawnHazard.getCardName() + " onto board");
@@ -581,7 +588,7 @@ public class GameActivity extends AppCompatActivity {
             }
 
             // TODO: This should be the player's choice, whether to spend life points on more draws
-            if (numFreeDrawsLeft == 0){
+            if (numFreeDrawsLeft <= 0){
                 setPlayerLifePoints(-1);
             }
 
@@ -621,7 +628,10 @@ public class GameActivity extends AppCompatActivity {
         // TODO: Remove debug line
         System.out.println("Called animateRobinsonCardToHand, index = " + cardIndex);
         RobinsonCard cardToAnim = (RobinsonCard)player.peekCardInHand(cardIndex);
-        Bitmap cardImage = decodeResource(cardToAnim.getCardImage());
+
+        BitmapDecoder bd = new BitmapDecoder();
+        Bitmap cardImage = bd.decodeResource(getApplicationContext(), cardToAnim.getCardImage(), CARD_SCALE);
+
         final Bitmap finalImage = cardImage;    // "final" within this scope, so we can pass to listener
         drawnCardFront.setImageBitmap(cardImage);
         drawnCardBack.setAlpha(1f);             // make the card back visible
@@ -651,7 +661,7 @@ public class GameActivity extends AppCompatActivity {
                 int sizeInDP = 2;
                 int marginInDP = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
                         sizeInDP, getResources().getDisplayMetrics());
-                lp.setMargins(marginInDP, 0, marginInDP, 0);
+                //lp.setMargins(marginInDP, 0, marginInDP, 0);
                 newCard.setLayoutParams(lp);
 
                 // Add card to player hand
@@ -696,11 +706,43 @@ public class GameActivity extends AppCompatActivity {
         }else{
             LOGGER.fine("[checkHazardDefeated] Player did not defeat hazard");
 
+            // Start CardTrasherActivity, passing player's hand via the intent
+            Intent intent = new Intent(this, CardTrasherActivity.class);
+            Bundle bundle = new Bundle();
+            bundle.putSerializable(CardTrasherActivity.PLAYER_HAND, player.getHandDeck());
+            intent.putExtras(bundle);
+            startActivityForResult(intent, CARD_TRASH_REQUEST);
+
             // TODO: This should cost life points
 
             hazardDeck.discardCard(drawnHazard);    // discard unbeaten hazard
-            discardHand();                          // throw away current hand
+            //discardHand();                          // throw away current hand
             drawHazardCard();                       // draw a new hazard
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (resultCode == RESULT_OK) {
+            // Check which request we're responding to
+
+            /*
+            if (requestCode == CARD_TRASH_REQUEST) {
+                boolean[] trashArray = data.getBooleanArrayExtra(CardTrasherActivity.TRASH_ARRAY);
+
+                // Reverse the array so when we pull cards out of the player's hand, the indexes
+                // of the cards we have yet to remove don't get shifted to different indexes!
+                for (int i = trashArray.length; i >= 0; i--){
+                    if (trashArray[i]){
+                        LOGGER.fine("Throwing away card " + player.getHandDeck().drawCardAtIndex(i) +
+                                " which was flagged for removal.");
+
+                        trashDeck.addCard(player.getHandDeck().drawCardAtIndex(i));
+                    }
+                }
+
+                discardHand();                          // throw away what's left of hand
+            }*/
         }
     }
 
@@ -719,34 +761,6 @@ public class GameActivity extends AppCompatActivity {
         // Update the player hand strength counter
         currentPlayerStrength = 0;
         robinsonStrength.setText(Integer.toString(currentPlayerStrength));
-    }
-
-    // Decodes image and scales it to reduce memory consumption - thanks to Fedor
-    // on stackoverflow! However, this will no longer be needed once we've got
-    // some fancy new images which are the proper size/resolution
-    private Bitmap decodeResource(int resID){
-        // Decode image size
-        BitmapFactory.Options o = new BitmapFactory.Options();
-        o.inJustDecodeBounds = true;
-        BitmapFactory.decodeResource(getResources(), resID, o);
-
-        // The new size we want to scale to
-        // Why not just use CARD_SCALE directly? This used to use
-        // a hard-coded value and I might want to go back to doing
-        // it that way (who knows)
-        final int REQUIRED_SIZE = CARD_SCALE;
-
-        // Find the correct scale value, should be a power of two
-        int scale = 1;
-        while (o.outWidth / scale / 2 >= REQUIRED_SIZE &&
-                o.outHeight / scale / 2 >= REQUIRED_SIZE) {
-            scale *= 2;
-        }
-
-        // Decode with inSampleSize
-        BitmapFactory.Options o2 = new BitmapFactory.Options();
-        o2.inSampleSize = scale;
-        return BitmapFactory.decodeResource(getResources(), resID, o2);
     }
 
     @Override

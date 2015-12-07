@@ -4,6 +4,7 @@ package com.boardgame.friday.cards;
 
 import com.boardgame.friday.GameActivity;
 
+import java.io.Serializable;
 import java.util.logging.Logger;
 
 /**
@@ -26,7 +27,7 @@ import java.util.logging.Logger;
  *
  * @author  Corey Marchetti
  */
-public class RobinsonCard extends Card {
+public class RobinsonCard extends Card{
     private static final Logger LOGGER = Logger.getLogger(GameActivity.class.getName());
 
     private int attackStrength;

@@ -2,6 +2,8 @@ package com.boardgame.friday.cards;
 
 //TODO: Do we need this useless parent class?
 
+import java.io.Serializable;
+
 /**
  * Card
  *
@@ -22,7 +24,7 @@ package com.boardgame.friday.cards;
  *
  * @author  Corey Marchetti
  */
-public class Card {
+public class Card implements Serializable{
     // Abilities a card can have
     public enum Ability {
         NO_ABILITY,         // 0

@@ -9,15 +9,20 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme" >
         <activity
-            android:name="com.boardgame.friday.GameActivity"
+            android:name=".GameActivity"
             android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar"
-            android:screenOrientation="landscape" >
+            android:screenOrientation="landscape"
+            android:theme="@style/AppTheme.NoActionBar" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity
+            android:name=".CardTrasherActivity"
+            android:label="@string/title_activity_card_trasher"
+            android:theme="@style/AppTheme.NoActionBar" >
         </activity>
     </application>
 

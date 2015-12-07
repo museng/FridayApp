@@ -1,5 +1,6 @@
 package com.boardgame.friday.cards;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
@@ -28,7 +29,7 @@ import java.util.Random;
  *
  * @author  Corey Marchetti
  */
-public class Deck {
+public class Deck implements Serializable{
     private ArrayList<Card> drawPile;
     private ArrayList<Card> discardPile;
 
@@ -88,8 +89,16 @@ public class Deck {
      * it's no longer our responsibility to keep track of the card we gave
      * him. It's up to him to return it to the proper discard pile!
      */
-    public Card drawCardOffTop(){
-        return drawPile.remove(0);
+    public Card drawCardOffTop(){ return drawPile.remove(0); }
+
+    /**
+     * Return the card at a particular index.
+     *
+     * @param index
+     * @return
+     */
+    public Card drawCardAtIndex(int index){
+        return drawPile.remove(index);
     }
 
     /**

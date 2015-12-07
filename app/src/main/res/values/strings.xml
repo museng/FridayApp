@@ -4,4 +4,7 @@
     <string name="button_draw">Draw</string>
     <string name="num_free_draws_string"># free draws</string>
     <string name="num_life_points_string">life points</string>
+    <string name="title_activity_card_trasher">CardTrasherActivity</string>
+    <string name="card_trasher_title">Trash cards</string>
+    <string name="done">Done</string>
 </resources>
