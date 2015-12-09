@@ -18,9 +18,11 @@ import java.io.Serializable;
  * drawing to the screen (GameActivity does that) and the different
  * sub-types don't even really have all that much in common. As such,
  * a Card has just two characteristics:
- *  cardName        the name of the card
- *  cardAbility     the ability the card has (if none, then "NO_ABILITY")
- *  cardImage       the image of the front of the card
+ *  cardName            the name of the card
+ *  cardAbility         the ability the card has (if none, then "NO_ABILITY")
+ *  cardImage           the image of the front of the card
+ *  flaggedForTrash     true when the card should be removed from the game
+ *                      at the next opportunity
  *
  * @author  Corey Marchetti
  */
@@ -49,6 +51,7 @@ public class Card implements Serializable{
     private String cardName;
     private Ability cardAbility;
     private int cardImage;
+    private boolean flaggedForTrash;
 
     /**
      * Create a new Card.
@@ -61,9 +64,13 @@ public class Card implements Serializable{
         this.cardName = cardName;
         this.cardAbility = cardAbility;
         this.cardImage = cardImage;
+
+        flaggedForTrash = false;
     }
 
     public String getCardName(){ return cardName; }
     public Ability getCardAbility() { return cardAbility; }
     public int getCardImage(){ return cardImage; }
+    public void flagForTrash(){ flaggedForTrash = true; }
+    public boolean flaggedForTrash() { return flaggedForTrash; }
 }

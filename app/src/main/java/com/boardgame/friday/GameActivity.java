@@ -37,9 +37,11 @@ import java.util.logging.Level;
 // ==========================================
 //    Overall to dos, somewhat prioritized
 // ==========================================
+// TODO: BUG - still getting out of memory exception issues
 // TODO: BUG - when you click Robinson deck too fast, it sometimes breaks
 // TODO: BUG - why are drawn cards painted so far apart?!
 // ==========================================
+// TODO: Fix the way cards get flagged for deletion, it's sort of sloppy with that stupid array
 // TODO: Add checks for death (player lifePoints < 0)
 // TODO: Add choice to spend life points on extra cards (right now it's forced)
 // TODO: Add ability to lose against hazards (and trash cards - "trash" deck so we keep 'em around?)
@@ -596,6 +598,7 @@ public class GameActivity extends AppCompatActivity {
             player.addCardToHand(robinsonDeck.drawCardOffTop());
 
             LOGGER.fine("[drawRobinsonCard] Robinson deck has " + robinsonDeck.getDrawPileSize() + " cards left");
+            LOGGER.fine("[drawRobinsonCard] Hand size is now " + player.getSizeOfHand());
 
             // TODO: Clean up the "cards left in the deck" display (when UI gets improved)
             robinsonDrawCounter.setText(Integer.toString(robinsonDeck.getDrawPileSize()));
@@ -709,15 +712,11 @@ public class GameActivity extends AppCompatActivity {
             // Start CardTrasherActivity, passing player's hand via the intent
             Intent intent = new Intent(this, CardTrasherActivity.class);
             Bundle bundle = new Bundle();
-            bundle.putSerializable(CardTrasherActivity.PLAYER_HAND, player.getHandDeck());
+            bundle.putSerializable(CardTrasherActivity.PLAYER_HAND, player.getHand());
+            bundle.putSerializable(CardTrasherActivity.PLAYER_LIFE, player.getLifePoints());
+            bundle.putSerializable(CardTrasherActivity.LIFE_DIFF, currentHazardStrength - currentPlayerStrength);
             intent.putExtras(bundle);
             startActivityForResult(intent, CARD_TRASH_REQUEST);
-
-            // TODO: This should cost life points
-
-            hazardDeck.discardCard(drawnHazard);    // discard unbeaten hazard
-            //discardHand();                          // throw away current hand
-            drawHazardCard();                       // draw a new hazard
         }
     }
 
@@ -725,24 +724,30 @@ public class GameActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == RESULT_OK) {
             // Check which request we're responding to
-
-            /*
             if (requestCode == CARD_TRASH_REQUEST) {
-                boolean[] trashArray = data.getBooleanArrayExtra(CardTrasherActivity.TRASH_ARRAY);
+                Bundle bundle = data.getExtras();
+                player.replaceHand((Deck) bundle.getSerializable(CardTrasherActivity.PLAYER_HAND));
 
-                // Reverse the array so when we pull cards out of the player's hand, the indexes
-                // of the cards we have yet to remove don't get shifted to different indexes!
-                for (int i = trashArray.length; i >= 0; i--){
-                    if (trashArray[i]){
-                        LOGGER.fine("Throwing away card " + player.getHandDeck().drawCardAtIndex(i) +
-                                " which was flagged for removal.");
+                // Walk through player's hand and add anything flagged for trash to trash deck
+                int i = 0;
+                while (i < player.getSizeOfHand()){
+                    if (((RobinsonCard)player.peekCardInHand(i)).isFlaggedForTrash()){
+                        setPlayerLifePoints(-((RobinsonCard)player.peekCardInHand(i)).getCostToRemove());
+                        trashDeck.addCard(player.removeCardFromHand(i));
 
-                        trashDeck.addCard(player.getHandDeck().drawCardAtIndex(i));
+                        LOGGER.fine("[onActivityResult] Trashed card " + trashDeck.peekCard(0).getCardName());
+                        LOGGER.fine("[onActivityResult] Hand size is now " + player.getSizeOfHand());
+                        LOGGER.fine("[onActivityResult] Trash deck size is now " + trashDeck.getDrawPileSize());
+                    }else{
+                        i++;
                     }
                 }
 
-                discardHand();                          // throw away what's left of hand
-            }*/
+                discardHand();  // discard away what's left of hand into regular discard pile
+
+                hazardDeck.discardCard(drawnHazard);    // discard unbeaten hazard
+                drawHazardCard();                       // draw a new hazard
+            }
         }
     }
 
@@ -751,7 +756,7 @@ public class GameActivity extends AppCompatActivity {
     // calling from the activity, there's no view to pass in
     public void discardHand(){
         // Throw away in the player's hand onto the Robinson deck discard pile
-        for (int i = 0; i < player.getSizeOfHand() - 1; i++){
+        for (int i = 0; i < player.getSizeOfHand(); i++){
             robinsonDeck.discardCard(player.takeTopCardFromHand());
         }
 
@@ -761,6 +766,8 @@ public class GameActivity extends AppCompatActivity {
         // Update the player hand strength counter
         currentPlayerStrength = 0;
         robinsonStrength.setText(Integer.toString(currentPlayerStrength));
+
+        LOGGER.fine("[discardHand] Hand size is now " + player.getSizeOfHand());
     }
 
     @Override

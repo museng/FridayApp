@@ -12,7 +12,7 @@
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:showIn="@layout/activity_game"
     tools:context=".GameActivity"
-    android:background="#88CC66">
+    android:background="@color/greenBackground">
 
     <LinearLayout
         android:layout_weight="1"

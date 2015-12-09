@@ -4,15 +4,12 @@ package com.boardgame.friday.cards;
 
 import com.boardgame.friday.GameActivity;
 
-import java.io.Serializable;
 import java.util.logging.Logger;
 
 /**
  * RobinsonCard
  *
  * Represents a Card, specifically one residing in the Robinson deck.
- * RobinsonCard doesn't need any special handling. It is completely
- * identical to its parent.
  *
  * RobinsonCard objects should only ever live in one of two places in
  * the main class:
@@ -21,6 +18,7 @@ import java.util.logging.Logger;
  *      - After being discarded (in discard pile associated with deck)
  *   o playerHand, in the main class, when a card has been drawn
  *     during a turn
+ *   o trashDeck, in the main class, after being removed from the game
  *
  * Card objects don't have to handle their own animation - the main
  * class will simply grab each card's image and draw it himself.
@@ -32,6 +30,14 @@ public class RobinsonCard extends Card{
 
     private int attackStrength;
     private int costToRemove;
+
+    // Robinson cards can be flagged for trash (i.e. player chooses to remove them
+    // from the game)
+    public enum Status {
+        NONE,       // 0
+        TRASH       // 1
+    }
+    private Status cardStatus;
 
     /**
      * Create a new Robinson card by invoking the Card constructor.
@@ -48,6 +54,7 @@ public class RobinsonCard extends Card{
 
         this.attackStrength = attackStrength;
         this.costToRemove = costToRemove;
+        cardStatus = Status.NONE;
 
         LOGGER.finer("RobinsonCard <" + cardName + "> has been created");
         LOGGER.finer("Strength:       " + attackStrength);
@@ -57,4 +64,7 @@ public class RobinsonCard extends Card{
 
     public int getAttackStrength(){ return attackStrength; }
     public int getCostToRemove(){ return costToRemove; }
+    public void flagStatusTrash(){ cardStatus = Status.TRASH; }
+    public void flagStatusNone(){ cardStatus = Status.NONE; }
+    public boolean isFlaggedForTrash() { return (cardStatus == Status.TRASH); }
 }

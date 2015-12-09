@@ -48,9 +48,7 @@ public class Deck implements Serializable{
      * Add a card to the bottom of the draw pile, i.e. the end
      * of the list.
      */
-    public void addCard(Card newCard){
-        drawPile.add(newCard);
-    }
+    public void addCard(Card newCard){ drawPile.add(newCard); }
 
     /**
      * shuffleDeck
@@ -89,7 +87,9 @@ public class Deck implements Serializable{
      * it's no longer our responsibility to keep track of the card we gave
      * him. It's up to him to return it to the proper discard pile!
      */
-    public Card drawCardOffTop(){ return drawPile.remove(0); }
+    public Card drawCardOffTop(){
+        return drawPile.remove(0);
+    }
 
     /**
      * Return the card at a particular index.
@@ -97,9 +97,7 @@ public class Deck implements Serializable{
      * @param index
      * @return
      */
-    public Card drawCardAtIndex(int index){
-        return drawPile.remove(index);
-    }
+    public Card drawCardAtIndex(int index){ return drawPile.remove(index); }
 
     /**
      * peekCard
@@ -126,9 +124,7 @@ public class Deck implements Serializable{
      * Just like real life, it's up to the caller to add their card to
      * the correct discard pile. We can't help you here.
      */
-    public void discardCard(Card discard){
-        discardPile.add(0, discard);
-    }
+    public void discardCard(Card discard){ discardPile.add(0, discard); }
 
     // Get pile sizes
     public int getDrawPileSize(){ return drawPile.size(); }
