@@ -24,6 +24,11 @@
             android:label="@string/title_activity_card_trasher"
             android:theme="@style/AppTheme.NoActionBar" >
         </activity>
+        <activity
+            android:name=".HazardPickerActivity"
+            android:label="@string/title_activity_hazard_picker"
+            android:theme="@style/AppTheme.NoActionBar" >
+        </activity>
     </application>
 
 </manifest>

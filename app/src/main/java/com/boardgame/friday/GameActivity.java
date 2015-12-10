@@ -41,11 +41,9 @@ import java.util.logging.Level;
 // TODO: BUG - when you click Robinson deck too fast, it sometimes breaks
 // TODO: BUG - why are drawn cards painted so far apart?!
 // ==========================================
-// TODO: Fix the way cards get flagged for deletion, it's sort of sloppy with that stupid array
+// TODO: Fix user choosing between hazards (doesn't always pick right one; user can select both!)
 // TODO: Add checks for death (player lifePoints < 0)
 // TODO: Add choice to spend life points on extra cards (right now it's forced)
-// TODO: Add ability to lose against hazards (and trash cards - "trash" deck so we keep 'em around?)
-// TODO: Add ability for user to choose between two hazards at the start of each turn
 // TODO: Add support for abilities!
 // TODO: Add ability to view discard piles and count decks
 // TODO: Make the UI pretty!
@@ -69,7 +67,8 @@ import java.util.logging.Level;
  */
 public class GameActivity extends AppCompatActivity {
 
-    private static final int CARD_TRASH_REQUEST = 0;
+    private static final int HAZARD_PICKER_REQUEST = 0;
+    private static final int CARD_TRASH_REQUEST = 1;
 
     public static final int CARD_SCALE = 150;  // scale cards to this size
 
@@ -536,17 +535,16 @@ public class GameActivity extends AppCompatActivity {
 
         drawnHazard = (HazardCard) hazardDeck.drawCardOffTop();
 
-        LOGGER.fine("[drawHazardCard] Drew hazard card = " + drawnHazard.getCardName());
+        HazardCard hazard1 = (HazardCard) hazardDeck.drawCardOffTop();
+        HazardCard hazard2 = (HazardCard) hazardDeck.drawCardOffTop();
 
-        BitmapDecoder bd = new BitmapDecoder();
-        Bitmap cardImage = bd.decodeResource(getApplicationContext(), drawnHazard.getCardImage(), CARD_SCALE);
-        drawnHazardImage.setImageBitmap(cardImage);
-
-        currentHazardStrength = drawnHazard.getHazardStrength(currentRound.ordinal());
-
-        LOGGER.fine("[drawHazardCard] Painted hazard card = " + drawnHazard.getCardName() + " onto board");
-
-        setNumFreeDraws(drawnHazard.getNumFreeDraws());
+        // Start HazardPickerActivity, passing the two drawn hazards via the intent
+        Intent intent = new Intent(this, HazardPickerActivity.class);
+        Bundle bundle = new Bundle();
+        bundle.putSerializable(HazardPickerActivity.HAZARD_SLOT1, hazard1);
+        bundle.putSerializable(HazardPickerActivity.HAZARD_SLOT2, hazard2);
+        intent.putExtras(bundle);
+        startActivityForResult(intent, HAZARD_PICKER_REQUEST);
     }
 
     private void setNumFreeDraws(int numFreeDraws){
@@ -664,7 +662,7 @@ public class GameActivity extends AppCompatActivity {
                 int sizeInDP = 2;
                 int marginInDP = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
                         sizeInDP, getResources().getDisplayMetrics());
-                //lp.setMargins(marginInDP, 0, marginInDP, 0);
+                lp.setMargins(marginInDP, marginInDP, 0, 0);
                 newCard.setLayoutParams(lp);
 
                 // Add card to player hand
@@ -724,7 +722,23 @@ public class GameActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == RESULT_OK) {
             // Check which request we're responding to
-            if (requestCode == CARD_TRASH_REQUEST) {
+            if (requestCode == HAZARD_PICKER_REQUEST){
+                Bundle bundle = data.getExtras();
+                drawnHazard = (HazardCard) bundle.getSerializable(HazardPickerActivity.HAZARD_SLOT1);
+                hazardDeck.discardCard((HazardCard) bundle.getSerializable(HazardPickerActivity.HAZARD_SLOT2));
+
+                LOGGER.fine("[drawHazardCard] Drew hazard card = " + drawnHazard.getCardName());
+
+                BitmapDecoder bd = new BitmapDecoder();
+                Bitmap cardImage = bd.decodeResource(getApplicationContext(), drawnHazard.getCardImage(), CARD_SCALE);
+                drawnHazardImage.setImageBitmap(cardImage);
+
+                currentHazardStrength = drawnHazard.getHazardStrength(currentRound.ordinal());
+
+                LOGGER.fine("[drawHazardCard] Painted hazard card = " + drawnHazard.getCardName() + " onto board");
+
+                setNumFreeDraws(drawnHazard.getNumFreeDraws());
+            } else if (requestCode == CARD_TRASH_REQUEST) {
                 Bundle bundle = data.getExtras();
                 player.replaceHand((Deck) bundle.getSerializable(CardTrasherActivity.PLAYER_HAND));
 
@@ -732,6 +746,7 @@ public class GameActivity extends AppCompatActivity {
                 int i = 0;
                 while (i < player.getSizeOfHand()){
                     if (((RobinsonCard)player.peekCardInHand(i)).isFlaggedForTrash()){
+                        ((RobinsonCard)player.peekCardInHand(i)).flagStatusNone();
                         setPlayerLifePoints(-((RobinsonCard)player.peekCardInHand(i)).getCostToRemove());
                         trashDeck.addCard(player.removeCardFromHand(i));
 

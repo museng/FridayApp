@@ -35,6 +35,13 @@ import java.util.logging.Logger;
 public class HazardCard extends Card {
     private static final Logger LOGGER = Logger.getLogger(GameActivity.class.getName());
 
+    // Hazard cards can be chosen by the user (the other will be discarded)
+    public enum Status {
+        NONE,       // 0
+        SELECTED    // 1
+    }
+    private Status cardStatus;
+
     // Abilities a card can have
     public enum HazardAbility {
         MINUS_ONE_LIFE,     // 0
@@ -72,6 +79,7 @@ public class HazardCard extends Card {
 
         this.numFreeDraws = hazardFreeDraws;
         this.hazardStrength = hazardStrength;   // expecting 3-length array (G,Y,R strengths)
+        cardStatus = Status.NONE;
 
         converted = new RobinsonCard(
                 robinsonName, robinsonAttackStrength, robinsonCostToRemove,
@@ -103,7 +111,8 @@ public class HazardCard extends Card {
     public RobinsonCard convertToRobinsonCard(){ return converted; }
 
     public int getNumFreeDraws() { return numFreeDraws; }
-    public int getHazardStrength(int round){
-        return hazardStrength[round];
-    }
+    public int getHazardStrength(int round){ return hazardStrength[round]; }
+    public void flagStatusSelected(){ cardStatus = Status.SELECTED; }
+    public void flagStatusNone(){ cardStatus = Status.NONE; }
+    public boolean isFlaggedForSelect() { return (cardStatus == Status.SELECTED); }
 }

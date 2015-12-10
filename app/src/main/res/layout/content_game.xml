@@ -134,11 +134,10 @@
             android:layout_marginRight="10dp">
 
             <LinearLayout android:id="@+id/player_hand_layout"
-                android:layout_width="wrap_content"
+                android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
                 android:fillViewport="true"
                 android:orientation="horizontal" >
-
             </LinearLayout>
         </HorizontalScrollView>
 
