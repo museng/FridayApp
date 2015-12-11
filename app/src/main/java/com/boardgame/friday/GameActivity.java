@@ -39,19 +39,18 @@ import java.util.logging.Level;
 // ==========================================
 // TODO: BUG - still getting out of memory exception issues
 // TODO: BUG - when you click Robinson deck too fast, it sometimes breaks
-// TODO: BUG - why are drawn cards painted so far apart?!
 // ==========================================
-// TODO: Fix user choosing between hazards (doesn't always pick right one; user can select both!)
 // TODO: Add checks for death (player lifePoints < 0)
-// TODO: Add choice to spend life points on extra cards (right now it's forced)
 // TODO: Add support for abilities!
+// TODO: Make the UI prettier! Add more counters and info
 // TODO: Add ability to view discard piles and count decks
-// TODO: Make the UI pretty!
 // TODO: Add pirates
+// ==========================================
 // TODO: All classes use the GameActivity logger - each class should use its own?!
 // TODO: Animation should be cleaner, the way it works right now it's sort of sloppy
 // TODO: Need better artwork - maybe small very minimalistic cards and you click to see full text?
 // TODO: Add more animation
+// TODO: Add choice to spend life points on extra cards (right now it's forced)
 // TODO: Add some "help" type stuff, explanation of abilities, etc - basically add the rule book!
 // TODO: Add stat tracking and high scores, maybe back them up to a DB on AWS
 // TODO: Add support for multiple levels
@@ -664,6 +663,8 @@ public class GameActivity extends AppCompatActivity {
                         sizeInDP, getResources().getDisplayMetrics());
                 lp.setMargins(marginInDP, marginInDP, 0, 0);
                 newCard.setLayoutParams(lp);
+                newCard.setScaleType(ImageView.ScaleType.FIT_XY);
+                newCard.setAdjustViewBounds(true);
 
                 // Add card to player hand
                 playerHandLayout.addView(newCard, 0);

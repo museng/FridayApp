@@ -21,13 +21,13 @@
         </activity>
         <activity
             android:name=".CardTrasherActivity"
-            android:label="@string/title_activity_card_trasher"
-            android:theme="@style/AppTheme.NoActionBar" >
+            android:theme="@style/Theme.FridayDialog"
+            android:excludeFromRecents="true" >
         </activity>
         <activity
             android:name=".HazardPickerActivity"
-            android:label="@string/title_activity_hazard_picker"
-            android:theme="@style/AppTheme.NoActionBar" >
+            android:theme="@style/Theme.FridayDialog"
+            android:excludeFromRecents="true" >
         </activity>
     </application>
 
